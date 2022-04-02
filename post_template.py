@@ -40,7 +40,7 @@ if __name__ == "__main__":
     tasks_lines = []
     posted_tasks = set()
     with open(task_path, "r", encoding="utf-8") as f:
-        tasks_lines = f.read().splitlines()
+        tasks_lines = [l for l in f.read().splitlines() if l != ""]
     tasks = set(tasks_lines)
 
     for task in tasks:
