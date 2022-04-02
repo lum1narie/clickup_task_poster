@@ -50,9 +50,9 @@ if __name__ == "__main__":
         try:
             r = post_template(task, auth, list_id, template_id)
         except ReadTimeout:
+            r = None
             print(f"time out ({TIMEOUT_SEC} sec.)")
         else:
-            r = None
             print(f"{r.status_code}: {r.reason}")
         print("-" * 60)
 
