@@ -11,10 +11,14 @@ ENV_AUTH = "CLICKUP_AUTH"
 ENV_LIST = "CLICKUP_LIST"
 ENV_TEMPLATE = "CLICKUP_TEMPLATE"
 
+# list file of tasks
 TASK_FILE = "tasks"
 
+# timeout for single API run
 TIMEOUT_SEC = 2
 
+# maximum API run in a minute
+POST_PER_MIN = 60
 
 def post_template(title, auth, list_id, template_id):
     headers = {"Authorization": auth, "Content-Type": "application/json"}
@@ -26,9 +30,9 @@ def post_template(title, auth, list_id, template_id):
 
 
 if __name__ == "__main__":
-    POST_PER_MIN = 60
     INTERVAL_MICROS = 1000000.0 * 60.0 / POST_PER_MIN
 
+    # load dotenv
     dotenv_path = join(dirname(__file__), ".env")
     load_dotenv(dotenv_path)
 
@@ -36,6 +40,7 @@ if __name__ == "__main__":
     list_id = os.environ.get(ENV_LIST)
     template_id = os.environ.get(ENV_TEMPLATE)
 
+    # read task file
     task_path = join(dirname(__file__), TASK_FILE)
     with open(task_path, "r", encoding="utf-8") as f:
         task_lines_dup = [l for l in f.read().splitlines()]
@@ -47,21 +52,27 @@ if __name__ == "__main__":
             task_lines.append(line)
 
     remain_lines = [] # record failed task
+    # post tasks
     for line in task_lines:
+        # ignore blank line
         if line == "":
             remain_lines.append(line)
             continue
 
+        # POST
         task = line
         print(f'Posting task "{task}"')
         start_micros = datetime.today().microsecond
 
+        # try POST
         try:
             r = post_template(task, auth, list_id, template_id)
         except ReadTimeout:
+            # when timeout
             r = None
             print(f"time out ({TIMEOUT_SEC} sec.)")
         else:
+            # show result if not timeout
             print(f"{r.status_code}: {r.reason}")
         print("-" * 60)
 
