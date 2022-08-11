@@ -37,13 +37,22 @@ if __name__ == "__main__":
     template_id = os.environ.get(ENV_TEMPLATE)
 
     task_path = join(dirname(__file__), TASK_FILE)
-    tasks_lines = []
-    posted_tasks = set()
     with open(task_path, "r", encoding="utf-8") as f:
-        tasks_lines = [l for l in f.read().splitlines() if l != ""]
-    tasks = set(tasks_lines)
+        task_lines_dup = [l for l in f.read().splitlines()]
+        
+    # remove duplicate task
+    task_lines = []
+    for line in task_lines_dup:
+        if line == "" or line not in task_lines:
+            task_lines.append(line)
 
-    for task in tasks:
+    remain_lines = [] # record failed task
+    for line in task_lines:
+        if line == "":
+            remain_lines.append(line)
+            continue
+
+        task = line
         print(f'Posting task "{task}"')
         start_micros = datetime.today().microsecond
 
@@ -58,16 +67,42 @@ if __name__ == "__main__":
 
         end_micros = datetime.today().microsecond
 
-        if r is not None and r.status_code == 200:
-            elapsed_micros = end_micros - start_micros
-            if elapsed_micros < INTERVAL_MICROS:
-                waiting_micros = INTERVAL_MICROS - elapsed_micros
-                if waiting_micros > 3000000:
-                    print(f"waiting {waiting_micros} microsec")
-                time.sleep(waiting_micros / 1000000.0)
+        if not (r is not None and r.status_code == 200):
+            # record if fail
+            remain_lines.add(task)
 
-            posted_tasks.add(task)
+        elapsed_micros = end_micros - start_micros
+        if elapsed_micros < INTERVAL_MICROS:
+            # wait if POST end too fast
+            waiting_micros = INTERVAL_MICROS - elapsed_micros
+            if waiting_micros > 3000000:
+                print(f"waiting {waiting_micros} microsec")
+            time.sleep(waiting_micros / 1000000.0)
 
-    new_tasklist = "\n".join([str(task) for task in tasks - posted_tasks])
+    # remove truncating ""
+    while len(remain_lines) > 0 and remain_lines[-1] == "":
+        remain_lines = remain_lines[:-1]
+    # remove beggining ""
+    while len(remain_lines) > 0 and remain_lines[0] == "":
+        remain_lines = remain_lines[1:]
+    # convert continuous "" into single ""
+    print(remain_lines)  # DEBUG:
+    for i in range(len(remain_lines) - 1, 0, -1):
+        if remain_lines[i] == "" and remain_lines[i - 1] == "":
+            remain_lines.pop(i)
+
+    # split lines into chunk divided by empty line
+    remain_chunks = [remain_lines[:]]
+    while "" in remain_chunks[-1]:
+        i = remain_chunks[-1].index("")
+        remain = remain_chunks[-1][i + 1:]
+        remain_chunks[-1] = remain_chunks[-1][:i]
+        remain_chunks.append(remain)
+
+    new_tasklist = "\n\n".join(
+        ["\n".join([str(line) for line in chunk])
+         for chunk in remain_chunks])
+
+    # output remain lines
     with open(task_path, "w", encoding="utf-8") as f:
         f.write(new_tasklist)
