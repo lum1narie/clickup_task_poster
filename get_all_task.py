@@ -1,4 +1,5 @@
 import os
+import sys
 from os.path import dirname, join
 import datetime
 
@@ -23,17 +24,17 @@ if __name__ == "__main__":
 
     c = ClickUpClient(auth, POST_PER_MIN)
 
-    d = int(datetime.datetime.strptime('20220801',
-                                       '%Y%m%d').timestamp()) * 1000
     task_param = {
         "archived": "true",
         "order_by": "created",
         "subtasks": "true",
         "include_closed": "true",
-        "date_created_gt": d
     }
     tasks = get_all_tasks(c,
                           space_id,
-                          list_param={"archived": True},
+                          list_param={"archived": "true"},
                           task_param=task_param)
     print("\n".join(map(str, tasks)))
+
+    print(f"{c.access_count} times accessed API", file=sys.stderr)
+    
