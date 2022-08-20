@@ -4,6 +4,8 @@ import time
 from datetime import datetime
 from os.path import dirname, join
 
+from clickup_api import *
+
 import requests
 from dotenv import load_dotenv
 
@@ -20,15 +22,6 @@ TIMEOUT_SEC = 2
 # maximum API run in a minute
 POST_PER_MIN = 60
 
-def post_template(title, auth, list_id, template_id):
-    headers = {"Authorization": auth, "Content-Type": "application/json"}
-    url = f"https://api.clickup.com/api/v2/list/{list_id}/taskTemplate/{template_id}"
-    body = {"name": title}
-
-    resp = requests.post(url, json=body, timeout=TIMEOUT_SEC, headers=headers)
-    return resp
-
-
 if __name__ == "__main__":
     INTERVAL_MICROS = 1000000.0 * 60.0 / POST_PER_MIN
 
@@ -44,14 +37,14 @@ if __name__ == "__main__":
     task_path = join(dirname(__file__), TASK_FILE)
     with open(task_path, "r", encoding="utf-8") as f:
         task_lines_dup = [l for l in f.read().splitlines()]
-        
+
     # remove duplicate task
     task_lines = []
     for line in task_lines_dup:
         if line == "" or line not in task_lines:
             task_lines.append(line)
 
-    remain_lines = [] # record failed task
+    remain_lines = []  # record failed task
     # post tasks
     for line in task_lines:
         # ignore blank line
@@ -66,7 +59,8 @@ if __name__ == "__main__":
 
         # try POST
         try:
-            r = post_template(task, auth, list_id, template_id)
+            r = create_task_template({"name": task}, auth, list_id,
+                                     template_id)
         except ReadTimeout:
             # when timeout
             r = None
@@ -110,8 +104,7 @@ if __name__ == "__main__":
         remain_chunks.append(remain)
 
     new_tasklist = "\n\n".join(
-        ["\n".join([str(line) for line in chunk])
-         for chunk in remain_chunks])
+        ["\n".join([str(line) for line in chunk]) for chunk in remain_chunks])
 
     # output remain lines
     with open(task_path, "w", encoding="utf-8") as f:
