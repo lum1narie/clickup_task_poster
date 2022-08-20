@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
         if not (r is not None and r.status_code == 200):
             # record if fail
-            remain_lines.add(task)
+            remain_lines.append(task)
 
         elapsed_micros = end_micros - start_micros
         if elapsed_micros < INTERVAL_MICROS:
@@ -97,7 +97,6 @@ if __name__ == "__main__":
     while len(remain_lines) > 0 and remain_lines[0] == "":
         remain_lines = remain_lines[1:]
     # convert continuous "" into single ""
-    print(remain_lines)  # DEBUG:
     for i in range(len(remain_lines) - 1, 0, -1):
         if remain_lines[i] == "" and remain_lines[i - 1] == "":
             remain_lines.pop(i)
@@ -116,4 +115,4 @@ if __name__ == "__main__":
 
     # output remain lines
     with open(task_path, "w", encoding="utf-8") as f:
-        f.write(new_tasklist)
+        f.write(new_tasklist + "\n")
