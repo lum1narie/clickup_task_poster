@@ -1,11 +1,7 @@
-import json
 import os
-import time
-from datetime import datetime
 from os.path import dirname, join
-import requests
 
-from clickup_api import *
+from clickup_client import *
 
 from dotenv import load_dotenv
 
