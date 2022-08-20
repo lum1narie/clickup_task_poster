@@ -14,7 +14,7 @@ def get_all_lists(client, space_id, params=dict()):
 def get_all_tasks_in_list(client, list_id, params=dict()):
     tasks = []
     page = 0
-    params["subtasks"] = True
+    params["subtasks"] = "true"
 
     while True:
         params["page"] = page

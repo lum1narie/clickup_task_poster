@@ -26,10 +26,10 @@ if __name__ == "__main__":
     d = int(datetime.datetime.strptime('20220801',
                                        '%Y%m%d').timestamp()) * 1000
     task_param = {
-        "archived": True,
+        "archived": "true",
         "order_by": "created",
-        "subtasks": True,
-        "include_closed": True,
+        "subtasks": "true",
+        "include_closed": "true",
         "date_created_gt": d
     }
     tasks = get_all_tasks(c,
