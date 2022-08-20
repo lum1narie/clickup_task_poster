@@ -11,6 +11,7 @@ ENV_SPACE = "CLICKUP_SPACE"
 # maximum API run in a minute
 POST_PER_MIN = 60
 
+
 def get_all_lists(client, space_id, params=dict()):
     lists = []
 
@@ -32,7 +33,8 @@ def get_all_tasks_in_list(client, list_id, params=dict()):
     while True:
         params["page"] = page
         resp = client.get_tasks(list_id, params)
-        if len(resp.json()["tasks"]) == 0:
+        if "tasks" not in resp.json():
+            print(resp.json())
             break
 
         tasks += resp.json()["tasks"]
