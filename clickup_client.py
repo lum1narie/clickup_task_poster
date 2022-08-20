@@ -16,7 +16,7 @@ class ClickUpClient():
     def set_post_per_min(self, post_per_min):
         self.post_per_min = post_per_min
         self.interval_micros = 1000000.0 * 60.0 / self.post_per_min
-        
+
     # FOLDER
     def get_folders(self, space_id, params=dict()):
         headers = {
@@ -48,6 +48,20 @@ class ClickUpClient():
         return resp
 
     # TASK
+    def get_task(self, task_id, params=dict()):
+        headers = {
+            "Authorization": self.auth,
+            "Content-Type": "application/json"
+        }
+        url = f"https://api.clickup.com/api/v2/task/{task_id}/"
+
+        resp = self.access("GET", url, {
+            "timeout": self.TIMEOUT_SEC,
+            "headers": headers,
+            "params": params
+        })
+        return resp
+
     def get_tasks(self, list_id, params=dict()):
         headers = {
             "Authorization": self.auth,
@@ -76,6 +90,20 @@ class ClickUpClient():
         })
         return resp
 
+    # TIME TRACKING 2.0
+    def get_time_entries_in_range(self, team_id, params=dict()):
+        headers = {
+            "Authorization": self.auth,
+            "Content-Type": "application/json"
+        }
+        url = f"https://api.clickup.com/api/v2/team/{team_id}/time_entries"
+
+        resp = self.access("GET", url, {
+            "timeout": self.TIMEOUT_SEC,
+            "headers": headers,
+            "params": params
+        })
+        return resp
 
     def access(self, method, url, args):
         PRINT_MICROS_THRESHOLD = 3000000
