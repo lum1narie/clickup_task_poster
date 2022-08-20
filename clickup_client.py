@@ -13,6 +13,8 @@ class ClickUpClient():
         self.last_accessed_time = datetime.datetime.now(
         ).microsecond - self.interval_micros
 
+        self.access_count = 0
+
     def set_post_per_min(self, post_per_min):
         self.post_per_min = post_per_min
         self.interval_micros = 1000000.0 * 60.0 / self.post_per_min
@@ -124,5 +126,7 @@ class ClickUpClient():
             # when timeout
             r = None
         self.last_accessed_time = datetime.datetime.now().microsecond
+
+        self.access_count += 1
 
         return r
