@@ -3,10 +3,10 @@ import os
 import time
 from datetime import datetime
 from os.path import dirname, join
+import requests
 
 from clickup_api import *
 
-import requests
 from dotenv import load_dotenv
 
 ENV_AUTH = "CLICKUP_AUTH"
@@ -15,9 +15,6 @@ ENV_TEMPLATE = "CLICKUP_TEMPLATE"
 
 # list file of tasks
 TASK_FILE = "tasks"
-
-# timeout for single API run
-TIMEOUT_SEC = 2
 
 # maximum API run in a minute
 POST_PER_MIN = 60
@@ -44,6 +41,9 @@ if __name__ == "__main__":
         if line == "" or line not in task_lines:
             task_lines.append(line)
 
+    # ready client
+    c = ClickUpClient(auth)
+
     remain_lines = []  # record failed task
     # post tasks
     for line in task_lines:
@@ -55,34 +55,20 @@ if __name__ == "__main__":
         # POST
         task = line
         print(f'Posting task "{task}"')
-        start_micros = datetime.today().microsecond
 
         # try POST
-        try:
-            r = create_task_template({"name": task}, auth, list_id,
-                                     template_id)
-        except ReadTimeout:
+        r = c.create_task_template({"name":task}, list_id, template_id)
+        if r is None:
             # when timeout
-            r = None
-            print(f"time out ({TIMEOUT_SEC} sec.)")
+            print(f"time out ({c.TIMEOUT_SEC} sec.)")
         else:
-            # show result if not timeout
             print(f"{r.status_code}: {r.reason}")
         print("-" * 60)
 
-        end_micros = datetime.today().microsecond
 
         if not (r is not None and r.status_code == 200):
             # record if fail
             remain_lines.append(task)
-
-        elapsed_micros = end_micros - start_micros
-        if elapsed_micros < INTERVAL_MICROS:
-            # wait if POST end too fast
-            waiting_micros = INTERVAL_MICROS - elapsed_micros
-            if waiting_micros > 3000000:
-                print(f"waiting {waiting_micros} microsec")
-            time.sleep(waiting_micros / 1000000.0)
 
     # remove truncating ""
     while len(remain_lines) > 0 and remain_lines[-1] == "":
